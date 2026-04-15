@@ -4,19 +4,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
-# Импортируем ViewSet'ы
 from lms.views import CourseViewSet
-from users.views import UserProfileViewSet
+from users.views import UserProfileViewSet, PaymentViewSet
 
 # Создаем роутер для ViewSet'ов
 router = DefaultRouter()
 router.register(r'courses', CourseViewSet)
 router.register(r'users', UserProfileViewSet)
+router.register(r'payments', PaymentViewSet)  # Добавляем маршруты для платежей
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),  # Маршруты для ViewSet'ов
-    path('api/', include('lms.urls')),   # Маршруты для Generic-классов уроков
+    path('api/', include(router.urls)),
+    path('api/', include('lms.urls')),
 ]
 
 # Добавляем URL для медиа-файлов в режиме разработки
