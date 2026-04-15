@@ -2,17 +2,6 @@ from rest_framework import serializers
 from .models import Course, Lesson
 
 
-class CourseSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели курса
-    """
-    lessons_count = serializers.IntegerField(source='lessons.count', read_only=True)
-
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'preview', 'description', 'lessons_count']
-
-
 class LessonSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели урока
@@ -22,3 +11,23 @@ class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'title', 'description', 'preview', 'video_link', 'course', 'course_title']
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели курса с выводом количества уроков
+    и списка всех уроков
+    """
+    # Задание 1: Используем SerializerMethodField для количества уроков
+    lessons_count = serializers.SerializerMethodField()
+
+    # Задание 3: Вложенный сериализатор для вывода всех уроков
+    lessons = LessonSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'preview', 'description', 'lessons_count', 'lessons']
+
+    def get_lessons_count(self, obj):
+        """Метод для получения количества уроков в курсе"""
+        return obj.lessons.count()
