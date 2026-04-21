@@ -7,10 +7,12 @@ class LessonSerializer(serializers.ModelSerializer):
     Сериализатор для модели урока
     """
     course_title = serializers.CharField(source='course.title', read_only=True)
+    owner_email = serializers.CharField(source='owner.email', read_only=True)
 
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'description', 'preview', 'video_link', 'course', 'course_title']
+        fields = ['id', 'title', 'description', 'preview', 'video_link', 'course', 'course_title', 'owner', 'owner_email']
+        read_only_fields = ['owner', 'owner_email']
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -18,15 +20,14 @@ class CourseSerializer(serializers.ModelSerializer):
     Сериализатор для модели курса с выводом количества уроков
     и списка всех уроков
     """
-    # Задание 1: Используем SerializerMethodField для количества уроков
     lessons_count = serializers.SerializerMethodField()
-
-    # Задание 3: Вложенный сериализатор для вывода всех уроков
     lessons = LessonSerializer(many=True, read_only=True)
+    owner_email = serializers.CharField(source='owner.email', read_only=True)
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'preview', 'description', 'lessons_count', 'lessons']
+        fields = ['id', 'title', 'preview', 'description', 'lessons_count', 'lessons', 'owner', 'owner_email']
+        read_only_fields = ['owner', 'owner_email']
 
     def get_lessons_count(self, obj):
         """Метод для получения количества уроков в курсе"""
