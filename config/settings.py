@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta  # ДЛЯ JWT
 from dotenv import load_dotenv
 
 # Загружаем переменные из .env файла
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
 
     # Third party apps
     'rest_framework',
+    'rest_framework_simplejwt',  # JWT
     'django_filters',
 
     # Local apps
@@ -112,12 +114,25 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Настройки DRF
+# Замена стандартной модели пользователя
+AUTH_USER_MODEL = 'users.User'
+
+# ==================== НАСТРОЙКИ DRF ====================
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT авторизация
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',  # По умолчанию авторизация всх эндпоинтов
     ]
 }
 
-# Замена стандартной модели пользователя
-AUTH_USER_MODEL = 'users.User'
+# ==================== НАСТРОЙКИ JWT ====================
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Время жизни access токена
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Время жизни refresh токена
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}
