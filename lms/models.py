@@ -10,7 +10,6 @@ class Course(models.Model):
     preview = models.ImageField(upload_to='courses/previews/', blank=True, null=True, verbose_name='Превью')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
-    # ПОЛЕ ВЛАДЕЛЬЦА
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -23,6 +22,7 @@ class Course(models.Model):
     class Meta:
         verbose_name = 'Курс'
         verbose_name_plural = 'Курсы'
+        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
 
     def __str__(self):
         return self.title
@@ -38,7 +38,6 @@ class Lesson(models.Model):
     video_link = models.URLField(blank=True, null=True, verbose_name='Ссылка на видео')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons', verbose_name='Курс')
 
-    # ПОЛЕ ВЛАДЕЛЬЦА
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -51,6 +50,38 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = 'Урок'
         verbose_name_plural = 'Уроки'
+        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
 
     def __str__(self):
         return self.title
+
+
+class Subscription(models.Model):
+    """
+    Модель подписки на обновления курса
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='subscriptions',
+        verbose_name='Пользователь'
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='subscriptions',
+        verbose_name='Курс'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата подписки'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        unique_together = ('user', 'course')  # Гарантируем уникальность пары пользователь-курс
+        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
+
+    def __str__(self):
+        return f'{self.user.email} -> {self.course.title}'
