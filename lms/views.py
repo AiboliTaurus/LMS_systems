@@ -7,7 +7,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
-from .paginators import CoursePaginator, LessonPaginator
 from users.permissions import IsModerator, IsOwner, IsOwnerOrModerator
 
 
@@ -17,7 +16,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    pagination_class = CoursePaginator  # Добавляем пагинацию
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
     ordering_fields = ['title', 'id']
@@ -63,7 +61,6 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
     Generic-класс для получения списка уроков и создания нового урока
     """
     serializer_class = LessonSerializer
-    pagination_class = LessonPaginator  # Добавляем пагинацию
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
     ordering_fields = ['title', 'course__title']
