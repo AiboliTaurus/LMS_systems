@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from datetime import timedelta  # ДЛЯ JWT
+from datetime import timedelta
 from dotenv import load_dotenv
 
 # Загружаем переменные из .env файла
@@ -28,8 +28,9 @@ INSTALLED_APPS = [
 
     # Third party apps
     'rest_framework',
-    'rest_framework_simplejwt',  # JWT
+    'rest_framework_simplejwt',
     'django_filters',
+    'drf_yasg',
 
     # Local apps
     'users',
@@ -131,10 +132,14 @@ REST_FRAMEWORK = {
 
 # ==================== НАСТРОЙКИ JWT ====================
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Время жизни access токена
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Время жизни refresh токена
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+# ==================== НАСТРОЙКИ STRIPE ====================
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
