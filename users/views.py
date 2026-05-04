@@ -13,6 +13,7 @@ from .serializers import (
     CreatePaymentSerializer, PaymentStatusSerializer
 )
 from .permissions import IsModerator, IsOwner
+from .tasks import send_payment_success_email
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
@@ -214,6 +215,15 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Отправка письма об успешной оплате (асинхронно через Celery)
+        course_title = course.title if course else (lesson.title if lesson else 'Курс')
+        send_payment_success_email.delay(
+            request.user.id,
+            payment.id,
+            float(amount),
+            course_title
+        )
+
         return Response({
             'payment_id': payment.id,
             'payment_url': result['payment_url'],
@@ -279,7 +289,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
             if result['success'] and result['status'] == 'paid':
                 payment.status = 'paid'
             else:
-                payment.status = 'paid'  # Принудительно устанавливаем как оплачен
+                payment.status = 'paid'
         else:
             payment.status = 'paid'
 
