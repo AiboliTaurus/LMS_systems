@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Базовый сериализатор для модели пользователя
     """
+
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'phone', 'city', 'avatar', 'date_joined']
@@ -45,6 +46,7 @@ class UserProfileSerializer(UserSerializer):
     """
     Сериализатор для просмотра чужого профиля (ограниченная информация)
     """
+
     class Meta(UserSerializer.Meta):
         fields = ['id', 'email', 'username', 'city', 'avatar', 'date_joined']
         read_only_fields = ['id', 'date_joined']
@@ -54,6 +56,7 @@ class UserOwnProfileSerializer(UserSerializer):
     """
     Сериализатор для просмотра/редактирования СВОЕГО профиля (полная информация)
     """
+
     class Meta(UserSerializer.Meta):
         fields = ['id', 'email', 'username', 'first_name', 'last_name', 'phone', 'city', 'avatar', 'date_joined']
         read_only_fields = ['id', 'date_joined']
@@ -62,23 +65,62 @@ class UserOwnProfileSerializer(UserSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели платежа
+
+    Для тестирования оплаты используйте тестовые карты Stripe:
+    - Visa: 4242 4242 4242 4242
+    - Mastercard: 5555 5555 5555 4444
+    - American Express: 3782 8224 6310 005
     """
     user_email = serializers.CharField(source='user.email', read_only=True)
     course_title = serializers.CharField(source='course.title', read_only=True, default=None)
     lesson_title = serializers.CharField(source='lesson.title', read_only=True, default=None)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = Payment
         fields = [
             'id', 'user', 'user_email', 'payment_date',
             'course', 'course_title', 'lesson', 'lesson_title',
-            'amount', 'payment_method', 'payment_method_display'
+            'amount', 'payment_method', 'payment_method_display',
+            'status', 'status_display', 'payment_url', 'stripe_session_id'
         ]
-        read_only_fields = ['id', 'payment_date']
+        read_only_fields = ['id', 'payment_date', 'payment_url', 'stripe_session_id', 'status']
 
 
-# Дополнительное задание: Расширенный сериализатор пользователя с историей платежей
+class CreatePaymentSerializer(serializers.Serializer):
+    """
+    Сериализатор для создания платежа через Stripe
+    """
+    course_id = serializers.IntegerField(required=False, allow_null=True)
+    lesson_id = serializers.IntegerField(required=False, allow_null=True)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+
+    def validate(self, data):
+        course_id = data.get('course_id')
+        lesson_id = data.get('lesson_id')
+
+        if not course_id and not lesson_id:
+            raise serializers.ValidationError("Должен быть указан course_id или lesson_id")
+
+        if course_id and lesson_id:
+            raise serializers.ValidationError("Нельзя указать одновременно course_id и lesson_id")
+
+        return data
+
+
+class PaymentStatusSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для статуса платежа
+    """
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_url = serializers.URLField(read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'status', 'status_display', 'amount', 'payment_url']
+
+
 class UserWithPaymentsSerializer(UserOwnProfileSerializer):
     """
     Сериализатор пользователя с историей платежей (только для СВОЕГО профиля)
@@ -91,4 +133,4 @@ class UserWithPaymentsSerializer(UserOwnProfileSerializer):
 
     def get_total_spent(self, obj):
         """Вычисляем общую сумму всех платежей пользователя"""
-        return sum(payment.amount for payment in obj.payments.all())
+        return sum(payment.amount for payment in obj.payments.filter(status='paid'))
