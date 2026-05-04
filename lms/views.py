@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
 from users.permissions import IsModerator, IsOwner, IsOwnerOrModerator
+from .tasks import send_course_update_notification
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -88,7 +90,40 @@ class CourseViewSet(viewsets.ModelViewSet):
         responses={200: CourseSerializer(), 403: "Доступ запрещен", 404: "Курс не найден"}
     )
     def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
+        """
+        Полное обновление курса с отправкой уведомлений подписчикам.
+        Дополнительное задание: проверка на 4 часа.
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        # Сохраняем старые данные для сравнения
+        old_title = instance.title
+        old_description = instance.description
+        old_updated_at = instance.updated_at
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Определяем, какие поля были обновлены
+        updated_fields = []
+        if instance.title != old_title:
+            updated_fields.append('название')
+        if instance.description != old_description:
+            updated_fields.append('описание')
+
+        # Дополнительное задание: проверка на 4 часа
+        now = timezone.now()
+        hours_since_update = (now - old_updated_at).total_seconds() / 3600
+
+        # Отправляем уведомления, только если курс не обновлялся более 4 часов
+        if updated_fields and hours_since_update >= 4:
+            send_course_update_notification.delay(instance.id, updated_fields)
+        elif updated_fields:
+            print(f"Course {instance.id} updated, but last update was {hours_since_update:.1f} hours ago. Notification not sent.")
+
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         operation_description="Частичное обновление курса (только владелец или модератор)",
@@ -96,7 +131,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         responses={200: CourseSerializer(), 403: "Доступ запрещен", 404: "Курс не найден"}
     )
     def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+        """
+        Частичное обновление курса с отправкой уведомлений подписчикам.
+        """
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
 
     @swagger_auto_schema(
         operation_description="Удаление курса (только владелец)",
