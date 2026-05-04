@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 # Загружаем переменные из .env файла
 load_dotenv()
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'drf_yasg',
+    'django_celery_beat',
 
     # Local apps
     'users',
@@ -143,3 +145,47 @@ SIMPLE_JWT = {
 # ==================== НАСТРОЙКИ STRIPE ====================
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+
+# ==================== НАСТРОЙКИ CELERY ====================
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
+
+# Часовой пояс для работы Celery (должен совпадать с TIME_ZONE)
+CELERY_TIMEZONE = TIME_ZONE
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+# Планировщик Celery Beat
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# ==================== ПЕРИОДИЧЕСКИЕ ЗАДАЧИ CELERY BEAT ====================
+CELERY_BEAT_SCHEDULE = {
+    'block-inactive-users-daily': {
+        'task': 'users.tasks.block_inactive_users',
+        'schedule': crontab(hour=0, minute=0),  # Каждый день в полночь
+        'options': {
+            'expires': 86400,
+        },
+    },
+}
+
+# ==================== НАСТРОЙКИ EMAIL ====================
+# Для тестирования используем консольный вывод
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Для реальной отправки (раскомментировать при необходимости)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.yandex.ru'
+# EMAIL_PORT = 465
+# EMAIL_USE_SSL = True
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = 'noreply@lms.com'
