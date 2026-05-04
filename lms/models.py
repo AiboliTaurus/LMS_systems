@@ -19,6 +19,12 @@ class Course(models.Model):
         blank=True
     )
 
+    # 👇 ДОБАВИТЬ ЭТО ПОЛЕ
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата последнего обновления'
+    )
+
     class Meta:
         verbose_name = 'Курс'
         verbose_name_plural = 'Курсы'
