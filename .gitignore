@@ -148,7 +148,7 @@ activemq-data/
 *.sage.py
 
 # Environments
-.env
+.env.docker
 .envrc
 .venv
 env/
@@ -219,3 +219,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 media/
+
+# ==================== DOCKER ====================
+# Docker files (не попадают в образ, но могут быть в репозитории)
+
+entrypoint.sh
+
+# Docker volumes (локальные)
+docker-data/
