@@ -17,7 +17,7 @@ class LessonSerializer(serializers.ModelSerializer):
         read_only_fields = ['owner', 'owner_email']
         extra_kwargs = {
             'video_link': {
-                'validators': [YouTubeLinkValidator()]  # Добавляем валидатор
+                'validators': [YouTubeLinkValidator()]
             }
         }
 
@@ -30,7 +30,7 @@ class CourseSerializer(serializers.ModelSerializer):
     lessons_count = serializers.SerializerMethodField()
     lessons = LessonSerializer(many=True, read_only=True)
     owner_email = serializers.CharField(source='owner.email', read_only=True)
-    is_subscribed = serializers.SerializerMethodField()  # Признак подписки
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Course

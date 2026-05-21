@@ -19,10 +19,16 @@ class Course(models.Model):
         blank=True
     )
 
+    # 👇 ДОБАВИТЬ ЭТО ПОЛЕ
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата последнего обновления'
+    )
+
     class Meta:
         verbose_name = 'Курс'
         verbose_name_plural = 'Курсы'
-        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
+        ordering = ['id']
 
     def __str__(self):
         return self.title
@@ -50,7 +56,7 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = 'Урок'
         verbose_name_plural = 'Уроки'
-        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
+        ordering = ['id']
 
     def __str__(self):
         return self.title
@@ -80,8 +86,8 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        unique_together = ('user', 'course')  # Гарантируем уникальность пары пользователь-курс
-        ordering = ['id']  # Добавлено для устранения предупреждения пагинации
+        unique_together = ('user', 'course')
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.user.email} -> {self.course.title}'
