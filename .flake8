@@ -8,3 +8,12 @@ exclude =
     __pycache__
     venv
     .venv
+    migrations
+    */migrations
+    */*/migrations
+
+# Игнорируемые ошибки (опционально)
+ignore =
+    E501,
+    W503,
+    E203
