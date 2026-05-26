@@ -1,16 +1,19 @@
 FROM python:3.12-slim
 
-# Отключаем буферизацию вывода Python (логи видны сразу)
+# Отключаем буферизацию вывода Python
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
 # Копируем и устанавливаем зависимости
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # Копируем весь проект
 COPY . .
 
-# Запуск сервера
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Собираем статику
+RUN python manage.py collectstatic --noinput
+
+# Запуск через Gunicorn (для продакшена)
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
