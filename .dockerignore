@@ -1,5 +1,6 @@
 .git
 .gitignore
+.env
 .env.docker
 .venv
 __pycache__
@@ -9,6 +10,7 @@ __pycache__
 *.sqlite3
 .coverage
 coverage.xml
+coverage.txt
 media/
 static/
 .idea
@@ -18,3 +20,7 @@ celerybeat-schedule
 celerybeat.pid
 .pytest_cache
 README.md
+htmlcov/
+nginx/
+scripts/
+*.md
