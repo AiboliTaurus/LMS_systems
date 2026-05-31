@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse  # 👈 ДОБАВИТЬ ЭТУ СТРОКУ
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_yasg.views import get_schema_view
@@ -51,6 +52,9 @@ router.register(r'payments', PaymentViewSet)
 router.register(r'register', UserRegistrationViewSet, basename='register')
 
 urlpatterns = [
+    # Health check endpoint (для Docker healthcheck)
+    path('health/', lambda request: HttpResponse("healthy"), name='health'),
+
     # Админка
     path('admin/', admin.site.urls),
 
