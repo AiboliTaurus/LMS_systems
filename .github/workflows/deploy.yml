@@ -99,5 +99,5 @@ jobs:
             git pull origin main
             docker compose --env-file .env.docker down
             docker compose --env-file .env.docker up -d --build
+            sleep 10
             docker compose --env-file .env.docker exec web python manage.py migrate
-            docker compose --env-file .env.docker exec web python manage.py collectstatic --noinput
